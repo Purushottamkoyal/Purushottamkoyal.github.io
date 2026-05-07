@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERVAULT - Terminal Secure Storage</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background: #000;
+            color: #00ff41;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+            cursor: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDBDNS40NSAwIDIgMy40NSAyIDhTNy40NSA2IDEyIDZDMTEuMjMgNiAxMC41IDUuMjMgMTAuNSA0QzEwLjUgMi43NyAxMS4yMyAyIDMgMlYxSDE2VjE2SDEzVjE0QzE0LjU1IDE0IDE2IDExLjU1IDE2IDdDMzYuNDUgNyAzNCAzLjQ1IDM0IDhTMzEuNDUgMTAgMjggMTBDMjYuNzcgMTAgMjUuNSA5LjIzIDI1LjUgN0MyNS41IDUuMjMgMjYuMjMgNCAyOCA0QzI5LjU1IDQgMzEgMy40NSAzMSAwWiIgZmlsbD0iIzAwZmY0MSIvPgo8L3N2Zz4K'), auto;
+        }
+
+        /* Matrix Rain Effect */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.1;
+        }
+
+        .matrix-char {
+            position: absolute;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 18px;
+            color: #00ff41;
+            animation: matrixFall linear infinite;
+        }
+
+        @keyframes matrixFall {
+            0% { transform: translateY(-100vh) rotateX(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotateX(720deg); opacity: 0; }
+        }
+
+        /* Terminal Loading */
+        .terminal-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .terminal-cursor {
+            display: inline-block;
+            background: #00ff41;
+            width: 15px;
+            height: 20px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Terminal Login */
+        .terminal-login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            font-family: 'IBM Plex Mono', monospace;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .terminal-box {
+            background: rgba(0, 255, 65, 0.05);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 3rem 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff41, #00d4ff, #8a2be2, #00ff41);
+            border-radius: 10px;
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .terminal-header {
+            color: #00ff41;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 20px #00ff41;
+            animation: glitch 2s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+
+        .terminal-prompt {
+            color: #00d4ff;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .terminal-input {
+            width: 100%;
+            background: transparent;
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 1rem;
+            color: #fff;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .terminal-input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            border-color: #00d4ff;
+        }
+
+        .terminal-btn {
+            width: 100%;
+            padding: 1rem;
+            background: transparent;
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .terminal-btn:hover {
+            background: #00ff41;
+            color: #000;
+            box-shadow: 0 0 30px #00ff41;
+            transform: scale(1.05);
+        }
+
+        .forgot-links {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .forgot-link {
+            color: #00d4ff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-link:hover {
+            color: #8a2be2;
+            text-shadow: 0 0 10px #8a2be2;
+        }
+
+        /* Dashboard Terminal */
+        .dashboard {
+            display: none;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .terminal-topbar {
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+        }
+
+        .terminal-title {
+            font-size: 1.5rem;
+            color: #00ff41;
+            font-weight: 700;
+        }
+
+        .terminal-clock {
+            color: #00d4ff;
+            font-family: 'Orbitron', monospace;
+        }
+
+        /* Terminal Grid */
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .terminal-card {
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid #00ff41;
+            border-radius: 10px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .terminal-card:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .terminal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .terminal-card:hover::before {
+            left: 100%;
+        }
+
+        .upload-zone {
+            border: 2px dashed #00ff41;
+            border-radius: 10px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        /* File Grid */
+        .files-terminal {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .file-item {
+            background: rgba(0, 255, 65, 0.08);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .file-item:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .file-thumb {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin: 0 auto 1rem;
+            object-fit: cover;
+            border: 1px solid #00ff41;
+            display: block;
+        }
+
+        .file-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #00ff41, #00d4ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1rem;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.9rem;
+        }
+
+        .delete-file {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 0, 0, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Search Terminal */
+        .search-terminal {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #00d4ff;
+        }
+
+        /* Sidebar Terminal */
+        .terminal-sidebar {
+            position: fixed;
+            left: -350px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            border-right: 2px solid #00ff41;
+            transition: left 0.4s ease;
+            z-index: 999;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .terminal-sidebar.active {
+            left: 0;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background: rgba(0, 255, 65, 0.2);
+            border: 2px solid #00ff41;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 20px #00ff41;
+            transform: rotate(90deg);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #00d4ff;
+            transition: all 0.3s ease;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(0, 255, 65, 0.2);
+            color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        /* Notifications */
+        .terminal-notification {
+            position: fixed;
+            top: 100px;
+            right: -400px;
+            background: rgba(0, 255, 65, 0.95);
+            color: #000;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            border-left: 4px solid #00ff41;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            transition: right 0.4s ease;
+            z-index: 10001;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            max-width: 400px;
+        }
+
+        .terminal-notification.show {
+            right: 2rem;
+        }
+
+        .terminal-notification.error {
+            background: rgba(255, 0, 0, 0.95);
+            border-left-color: #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Fullscreen Viewer */
+        .fullscreen-terminal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .fullscreen-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .fullscreen-content img, .fullscreen-content video {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 10px;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.5);
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .terminal-grid {
+                grid-template-columns: 1fr;
+            }
+            .files-terminal {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            .terminal-sidebar {
+                width: 100%;
+                left: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Matrix Background -->
+    <canvas class="matrix-bg" id="matrixCanvas"></canvas>
+
+    <!-- Terminal Loading Screen -->
+    <div class="terminal-loading" id="loadingScreen">
+        <div style="font-size: 1.2rem; margin-bottom: 1rem; color: #00d4ff;">INITIALIZING CYBERVAULT TERMINAL</div>
+        <div>cybervault:~# <span class="terminal-cursor"></span></div>
+    </div>
+
+    <!-- Terminal Login -->
+    <div class="terminal-login" id="loginContainer">
+        <div class="terminal-box">
+            <div class="terminal-header">CYBERVAULT v2.1</div>
+            <div class="terminal-prompt">cybervault:~# AUTHENTICATION REQUIRED</div>
+            <form id="loginForm">
+                <input type="text" id="username" class="terminal-input" placeholder="USERNAME → admin" required>
+                <input type="password" id="password" class="terminal-input" placeholder="PASSWORD → ********" required>
+                <div class="forgot-links">
+                    <a href="#" class="forgot-link" onclick="resetCredential('user')">[?] USER RECOVERY</a>
+                    <a href="#" class="forgot-link" onclick="resetCredential('pass')">[?] PASS MATRIX</a>
+                </div>
+                <button type="submit" class="terminal-btn">EXECUTE ACCESS</button>
+            </form>
+            <div style="margin-top: 2rem; font-size: 0.8rem; color: #00d4ff;">
+                🔒 END-TO-END ENCRYPTED | ZERO-KNOWLEDGE
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Terminal -->
+    <div class="dashboard" id="dashboard">
+        <!-- Top Bar -->
+        <div class="terminal-topbar">
+            <div class="terminal-title">CYBERVAULT TERMINAL</div>
+            <div style="display: flex; gap: 2rem; align-items: center;">
+                <div class="terminal-clock" id="liveClock"></div>
+                <button class="terminal-btn" onclick="logout()" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">LOGOUT</button>
+            </div>
+        </div>
+
+        <!-- Sidebar Toggle -->
+        <div class="sidebar-toggle" onclick="toggleSidebar()">
+            <div style="font-size: 1.2rem;">☰</div>
+        </div>
+
+        <!-- Terminal Sidebar -->
+        <div class="terminal-sidebar" id="sidebar">
+            <div class="sidebar-item active" onclick="showSection('main')">
+                <span>📊</span> DASHBOARD
+            </div>
+            <div class="sidebar-item" onclick="showSection('gallery')">
+                <span>🖼️</span> GALLERY
+            </div>
+            <div class="sidebar-item" onclick="createFolder()">
+                <span>📁</span> NEW FOLDER
+            </div>
+            <div class="sidebar-item">
+                <span>🔒</span> SECURITY
+            </div>
+        </div>
+
+        <div style="margin-left: 0; transition: margin-left 0.4s ease;" id="mainContent">
+            <!-- Main Dashboard -->
+            <div id="main">
+                <div class="terminal-grid">
+                    <div class="terminal-card">
+                        <div style="font-size: 1.2rem; color: #00ff41; margin-bottom: 1rem;">STORAGE MATRIX</div>
+                        <div style="font-size: 2.5rem; color: #00d4ff; margin-bottom: 0.5rem;">14.2 GB</div>
+                        <div style="color: #666; margin-bottom: 1.5rem;">USED / 50GB SECURE</div>
+                        <div style="width: 100%; height: 8px; background: rgba(0,255,65,0.2); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; background: linear-gradient(90deg, #00ff41, #00d4ff); width: 52%; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    <div class="terminal-card">
+                        <div class="upload-zone" id="uploadZone">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📤</div>
+                            <div>DRAG FILES HERE</div>
+                            <div style="color: #666; font-size: 0.9rem;">PHOTOS • VIDEOS • 50MB MAX</div>
+                            <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="search-terminal">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="SEARCH SECURE FILES...">
+                </div>
+
+                <div class="terminal-card" style="margin-top: 2rem;">
+                    <div style="font-size: 1.2rem; color: #00ff41; margin-bottom: 1.5rem;">RECENT UPLOADS</div>
+                    <div class="files-terminal" id="filesGrid"></div>
+                </div>
+            </div>
+
+            <!-- Gallery -->
+            <div id="gallery" style="display: none;">
+                <div style="font-size: 1.5rem; color: #00ff41; margin-bottom: 2rem; text-align: center;">
+                    PRIVATE GALLERY <span style="color: #00d4ff;" id="fileCount">0</span>
+                </div>
+                <div class="files-terminal" id="galleryGrid" style="grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Viewer -->
+    <div class="fullscreen-terminal" id="fullscreenViewer">
+        <div class="fullscreen-content">
+            <div class="fullscreen-close" onclick="closeFullscreen()">×</div>
+            <div id="fullscreenContent"></div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="terminal-notification" id="notification"></div>
+
+    <script>
+        // Secure Credentials
+        const ADMIN_USER = 'admin';
+        const ADMIN_PASS = 'Ekansh@2026';
+        
+        let files = [];
+        let isLoggedIn = false;
+        let storageUsed = 0;
+
+        // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loginContainer = document.getElementById('loginContainer');
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const filesGrid = document.getElementById('filesGrid');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const searchInput = document.getElementById('searchInput');
+        const sidebar = document.getElementById('sidebar');
+        const notification = document.getElementById('notification');
+        const fileCount = document.getElementById('fileCount');
+        const liveClock = document.getElementById('liveClock');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', initCyberVault);
+
+        function initCyberVault() {
+            createMatrixRain();
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => loadingScreen.style.display = 'none', 500);
+            }, 3000);
+            
+            setupEvents();
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function setupEvents() {
+            loginForm.onsubmit = handleLogin;
+            
+            uploadZone.onclick = () => fileInput.click();
+            uploadZone.ondragover = e => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            };
+            uploadZone.ondragleave = () => uploadZone.classList.remove('dragover');
+            uploadZone.ondrop = handleDrop;
+            fileInput.onchange = handleFiles;
+            
+            searchInput.oninput = filterFiles;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = usernameInput.value;
+            const pass = passwordInput.value;
+            
+            if (user === ADMIN_USER && pass === ADMIN_PASS) {
+                isLoggedIn = true;
+                loginContainer.style.display = 'none';
+                dashboard.style.display = 'block';
+                showNotification('ACCESS GRANTED - TERMINAL ONLINE', 'success');
+                renderFiles();
+            } else {
+                shakeEffect(passwordInput);
+                showNotification('ACCESS DENIED - REJECTED', 'error');
+                passwordInput.value = '';
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            processFiles([...e.dataTransfer.files]);
+        }
+
+        function handleFiles(e) {
+            processFiles([...e.target.files]);
+        }
+
+        function processFiles(newFiles) {
+            newFiles.forEach(file => {
+                if (file.size > 50 * 1024 * 1024) {
+                    showNotification(`FILE ${file.name} TOO LARGE`, 'error');
+                    return;
+                }
+                
+                const fileData = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: formatBytes(file.size),
+                    type: file.type.startsWith('image/') ? 'image' : 'video',
+                    url: URL.createObjectURL(file),
+                    date: new Date().toLocaleString()
+                };
+                
+                files.push(fileData);
+                storageUsed += file.size;
+                showNotification(`SECURED: ${file.name}`, 'success');
+            });
+            
+            renderFiles();
+            updateFileCount();
+            fileInput.value = '';
+        }
+
+        // FIXED PHOTO THUMBNAILS
+        function renderFiles(filtered = files) {
+            filesGrid.innerHTML = filtered.slice(0, 12).map(file => `
+                <div class="file-item" onclick="openFile('${file.id}')">
+                    <button class="delete-file" onclick="deleteFile('${file.id}', event)">×</button>
+                    ${file.type === 'image' ? 
+                        `<canvas class="file-thumb" data-src="${file.url}"></canvas>` :
+                        `<div class="file-icon">${file.type === 'video' ? '🎥' : '📄'}</div>`
+                    }
+                    <div class="file-name" title="${file.name}">${file.name}</div>
+                    <div style="font-size: 0.8rem; color: #666;">${file.size}</div>
+                    <div style="font-size: 0.75rem; color: #888;">${file.date}</div>
+                </div>
+            `).join('');
+
+            galleryGrid.innerHTML = filtered.map(file => `
+                <div class="file-item" onclick="openFile('${file.id}')" style="height: 280px;">
+                    ${file.type === 'image' ? 
+                        `<canvas class="file-thumb" data-src="${file.url}" style="width: 120px; height: 120px;"></canvas>` :
+                        `<div class="file-icon" style="width: 120px; height: 120px; font-size: 3.5rem;">${file.type === 'video' ? '🎥' : '📄'}</div>`
+                    }
+                    <div class="file-name">${file.name}</div>
+                </div>
+            `).join('');
+
+            setTimeout(createThumbnails, 100);
+        }
+
+        function createThumbnails() {
+            document.querySelectorAll('.file-thumb').forEach(canvas => {
+                if (!canvas.getContext('2d').getImageData(0,0,1,1).data[3]) {
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+                    img.onload = () => {
+                        canvas.width = canvas.offsetWidth;
+                        canvas.height = canvas.offsetHeight;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = canvas.dataset.src;
+                }
+            });
+        }
+
+        function openFile(id) {
+            const file = files.find(f => f.id === id);
+            if (!file) return;
+            
+            if (file.type === 'image') {
+                fullscreenContent.innerHTML = `<img src="${file.url}" alt="${file.name}">`;
+            } else {
+                fullscreenContent.innerHTML = `<video src="${file.url}" controls style="max-height: 80vh;"></video>`;
+            }
+            document.getElementById('fullscreenViewer').style.display = 'flex';
+        }
+
+        function deleteFile(id, e) {
+            e.stopPropagation();
+            files = files.filter(f => f.id !== id);
+            renderFiles();
+            updateFileCount();
+            showNotification('FILE TERMINATED', 'error');
+        }
+
+        function filterFiles() {
+            const term = searchInput.value.toLowerCase();
+            const filtered = files.filter(f => f.name.toLowerCase().includes(term));
+            renderFiles(filtered);
+        }
+
+        function updateFileCount() {
+            fileCount.textContent = files.length;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+        }
+
+        function showNotification(msg, type = 'success') {
+            notification.textContent = msg;
+            notification.className = `terminal-notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+
+        function shakeEffect(el) {
+            el.style.animation = 'shake 0.5s';
+            setTimeout(() => el.style.animation = '', 500);
+        }
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('#mainContent > div').forEach(d => d.style.display = 'none');
+            document.getElementById(section).style.display = 'block';
+            sidebar.classList.remove('active');
+        }
+
+        function createFolder() {
+            showNotification('FOLDER PROTOCOL INITIATED', 'success');
+        }
+
+        function resetCredential(type) {
+            showNotification(`[${type.toUpperCase()}] RECOVERY MATRIX ACTIVE`, 'error');
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenViewer').style.display = 'none';
+        }
+
+        function updateClock() {
+            liveClock.textContent = new Date().toLocaleString();
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            dashboard.style.display = 'none';
+            loginContainer.style.display = 'flex';
+            usernameInput.value = passwordInput.value = '';
+            showNotification('SESSION TERMINATED');
+            files = [];
+        }
+
+        function createMatrixRain() {
+            const canvas = document.getElementById('matrixCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = Array(Math.floor(columns)).fill(1);
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00ff41';
+                ctx.font = `${fontSize}px IBM Plex Mono`;
+
+                drops.forEach((y, i) => {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, y * fontSize);
+                    if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                });
+            }
+
+            setInterval(draw, 50);
+        }
+
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = '@keyframes shake {0%,100%{transform:translateX(0);}10%,30%,50%,70%,90%{transform:translateX(-10px);}20%,40%,60%,80%{transform:translateX(10px);}}';
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
